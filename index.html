@@ -1,0 +1,193 @@
+
+<body>
+    <div id="container"></div>
+    <script src="js/three.min.js"></script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        void main() {
+            gl_Position = vec4( position, 1.0 );
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+	#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2 u_resolution;
+uniform float u_time;
+
+vec3 rgb2hsb( in vec3 c ){
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz),
+                 vec4(c.gb, K.xy),
+                 step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r),
+                 vec4(c.r, p.yzx),
+                 step(p.x, c.r));
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)),
+                d / (q.x + e),
+                q.x);
+}
+
+//  Function from Iñigo Quiles
+//  https://www.shadertoy.com/view/MsS3Wc
+vec3 hsb2rgb( in vec3 c ){
+    vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                             6.0)-3.0)-1.0,
+                     0.0,
+                     1.0 );
+    rgb = rgb*rgb*(3.0-2.0*rgb);
+    return c.z * mix(vec3(1.0), rgb, c.y);
+}
+float min3 (vec3 v) {
+  	return min (min (v.x, v.y), v.z);
+}
+
+float max3 (vec3 v) {
+  	return max (max (v.x, v.y), v.z);
+}
+// ref: http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
+vec3 RGBtoRYB(vec3 RGB)
+{
+    vec3 rgb = RGB;
+    
+    // Remove white component
+    float Iw = min3(RGB);
+    rgb -= Iw;
+    
+    vec3 RYB;
+    
+    // Derive RYB
+    float rg = min(rgb.r, rgb.g);
+    RYB.r = rgb.r - rg;
+    RYB.y = 0.5 * (rgb.g + rg);
+    RYB.b = 0.5 * (rgb.b + rgb.g - rg);
+    
+    // Normalize
+    float n = max3(RYB) / max3(rgb);
+    if (n > 0.0)
+    	RYB /= n;
+    
+    // Add black 
+    float Ib = min3(vec3(1.0) - RGB);
+    RYB += Ib;
+    
+    return RYB;
+}
+#define TWO_PI 6.28318530718
+ 
+void drawRect(vec2 st,vec2 plb, vec2 prt) {
+	
+    vec2 bl = floor(st-plb)+1.0;
+	float pct = bl.x * bl.y;
+
+    // top-right 
+    vec2 tr = floor(1.0-st-prt)+1.0;
+	pct *= tr.x * tr.y;
+
+	//pct = 1.0-pct;
+    vec3 color = vec3(pct); 
+    //fcolor += color;
+	gl_FragColor += vec4(color,1.);
+}
+bool IsInnerRect(vec2 st,vec2 plb, vec2 prt) {
+	bool ans,b1,b2;
+	if (st.x > plb.x && st.y > plb.y) {
+		b1 = true;
+	} 
+	prt = 1.0 - prt;
+	if (st.x < prt.x && st.y < prt.y) {
+		b2 = true;
+	}
+	ans = b1 && b2;
+	return ans; 
+}
+void drawRectOnlyOutline(vec2 st,vec2 plb, vec2 prt,vec2 outlineAdd) { 
+	float pct=0.; 
+	if (IsInnerRect(st,plb,prt) && (!IsInnerRect(st,plb+outlineAdd,prt+outlineAdd))) {
+		pct = 1.;
+	} 
+    vec3 color = vec3(pct);  
+	gl_FragColor += vec4(color,1.);
+}
+void main(){
+	gl_FragColor=vec4(0.); 
+    vec2 st = gl_FragCoord.xy/u_resolution;           
+		
+	vec2 outlineAdd=vec2(0.02,0.02);
+    drawRectOnlyOutline(st,vec2(0.1,0.3),vec2(0.2,0.1),outlineAdd);  
+	drawRectOnlyOutline(st,vec2(0.2,0.2),vec2(0.3,0.05),outlineAdd); 
+}
+
+    </script>
+    <script>
+        var container;
+        var camera, scene, renderer, clock;
+        var uniforms;
+
+        init();
+        animate();
+
+        function init() {
+            container = document.getElementById( 'container' );
+
+            camera = new THREE.Camera();
+            camera.position.z = 1;
+			//camera.position.x=2.1;
+
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+
+            var geometry = new THREE.PlaneBufferGeometry( 2, 2 );
+
+            uniforms = {
+                u_time: { type: "f", value: 1.0 },
+                u_resolution: { type: "v2", value: new THREE.Vector2() }
+            };
+
+            var material = new THREE.ShaderMaterial( {
+                uniforms: uniforms,
+                vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+            } );
+
+            var mesh = new THREE.Mesh( geometry, material );
+            scene.add( mesh );
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio( window.devicePixelRatio );
+
+            container.appendChild( renderer.domElement );
+
+            onWindowResize();
+            window.addEventListener( 'resize', onWindowResize, false );
+        }
+
+        function onWindowResize( event ) {
+			var f1=1.0;
+			var w=500;
+			var h=500;
+            //renderer.setSize( window.innerWidth *f1, window.innerHeight * f1 );
+            renderer.setSize( w, h );
+            uniforms.u_resolution.value.x = renderer.domElement.width * f1;
+            uniforms.u_resolution.value.y = renderer.domElement.height * f1;
+            //uniforms.u_resolution.value.x = w;
+            //uniforms.u_resolution.value.y = h;
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+            render();
+        }
+
+        function render() {
+            uniforms.u_time.value += clock.getDelta();
+            renderer.render( scene, camera );
+        }
+    </script>
+	<style type="text/css">
+	 #container { 
+	 }
+	</style>
+</body>
