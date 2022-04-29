@@ -114,13 +114,31 @@ void drawRectOnlyOutline(vec2 st,vec2 plb, vec2 prt,vec2 outlineAdd) {
 float f1(float x) {
 	return abs(sin(x+u_time*1.0));
 }
-void main(){
-	gl_FragColor=vec4(0.); 
-    vec2 st = gl_FragCoord.xy/u_resolution;           
+vec2 f1(vec2 x) {
+	return vec2(f1(x.x),f1(x.y));
+}
+void drawCycle(vec2 st, vec2 ori, float r, float outHalfWid) {
+	float dis=distance(st,ori);
+	if (dis < (r+outHalfWid) && dis > (r-outHalfWid)) { 
+		//gl_FragColor = vec4(hsb2rgb(vec3(f1(dis),f1(1.),f1(1.))),1.);
+		vec2 n = normalize(st-ori);
+		vec2 x1 = abs(smoothstep(ori+(r - outHalfWid)*n ,ori+(r +outHalfWid)*n,st) - 0.5)*2.0;
+		x1 = 1.0 - x1;
+		vec3 color = hsb2rgb(vec3(f1(x1.x*x1.y),f1(1.),f1(1.)));
+		gl_FragColor += vec4(color,1.);
 		
-	vec2 outlineAdd=vec2(0.02,0.02);
+	}
+}
+void main(){
+	gl_FragColor=vec4(vec3(0.),1.); 
+    vec2 st = gl_FragCoord.xy/u_resolution;           
+		 
+	//drawCycle(st,vec2(0.5),0.4,0.05);
+	drawCycle(st,vec2(f1(0.5)),f1(0.4),f1(0.05));
+	drawCycle(st,vec2(f1(0.15)),f1(0.24),f1(0.35));
+	
+	vec2 outlineAdd=vec2(0.02,0.02); 
     drawRectOnlyOutline(st,vec2(f1(0.1),f1(0.3)),vec2(f1(0.2),f1(0.1)),outlineAdd);  
-	//drawRectOnlyOutline(st,vec2(0.2,0.2),vec2(0.3,0.05),outlineAdd); 
 }
 
     </script>
