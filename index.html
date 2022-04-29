@@ -111,13 +111,16 @@ void drawRectOnlyOutline(vec2 st,vec2 plb, vec2 prt,vec2 outlineAdd) {
     vec3 color = vec3(pct);  
 	gl_FragColor += vec4(color,1.);
 }
+float f1(float x) {
+	return abs(sin(x+u_time*1.0));
+}
 void main(){
 	gl_FragColor=vec4(0.); 
     vec2 st = gl_FragCoord.xy/u_resolution;           
 		
 	vec2 outlineAdd=vec2(0.02,0.02);
-    drawRectOnlyOutline(st,vec2(0.1,0.3),vec2(0.2,0.1),outlineAdd);  
-	drawRectOnlyOutline(st,vec2(0.2,0.2),vec2(0.3,0.05),outlineAdd); 
+    drawRectOnlyOutline(st,vec2(f1(0.1),f1(0.3)),vec2(f1(0.2),f1(0.1)),outlineAdd);  
+	//drawRectOnlyOutline(st,vec2(0.2,0.2),vec2(0.3,0.05),outlineAdd); 
 }
 
     </script>
