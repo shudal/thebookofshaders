@@ -157,21 +157,6 @@ void drawCycleTmp(vec2 st) {
     color = (1.0-pct)*color+pct*vec3(0.0,1.0,0.0);
 	gl_FragColor = vec4(color,1.0);
 }
-void main2(){
-	gl_FragColor=vec4(vec3(0.),1.); 
-    vec2 st = gl_FragCoord.xy/u_resolution;           
-		
-	//drawCycleTmp(st);
-	drawCycle(st,vec2(0.5),0.4,0.05);
-	drawCycle(st,vec2(0.5),0.2,0.05);
-	drawCycle(st,vec2(0.5),0.3,0.05);
-	//drawCycle(st,vec2(f1(0.5)),f1(0.4),f1(0.05));
-	//drawCycle(st,vec2(f1(0.15)),f1(0.24),f1(0.35));
-	
-	vec2 outlineAdd=vec2(0.02,0.02); 
-    //drawRectOnlyOutline(st,vec2(f1(0.1),f1(0.3)),vec2(f1(0.2),f1(0.1)),outlineAdd);  
-}
-
 void drawFlower(vec2 st, vec2 ori, float cntHuaBan, float wid,float huaBanLenAdd) {
     vec3 color = vec3(0.0);
 
@@ -182,7 +167,7 @@ void drawFlower(vec2 st, vec2 ori, float cntHuaBan, float wid,float huaBanLenAdd
     //a = f1(a);
 
     float f = abs(cos(a*(cntHuaBan / 2.0))) * wid + huaBanLenAdd; 
- 
+    f = abs(fract(a*cntHuaBan)*wid)+huaBanLenAdd;
     //f = f1(f);
     float sv = smoothstep(f,f+0.05,r);
     if (sv > 0. && sv < 1.) { 
@@ -202,13 +187,18 @@ void main(){
     float a = atan(pos.y,pos.x);
 
     vec2 ori = f1(vec2(0.2,0.2));
-    drawFlower(st,ori,8.,0.1,0.1);
+    //drawFlower(st,ori,8.,0.1,0.1);
+    drawFlower(st,ori,8.,0.2,0.02);
     drawCycle(st,ori,0.05,0.05);
     drawCycle(st,ori,0.13,0.05);
     float f = cos(a*3.);
     f = abs(cos(a*3.));
     f = abs(cos(a*2.5))*.5+0.3;
     f = abs(cos(a*12.)*sin(a*3.))*.8+.1;
+    f = abs(fract(a*6.));
+    f = abs(max(fract(a),fract(a+0.5)));
+    f = abs(floor( (sin(a*8. )+0.2)-0.257)+1.);
+	f = floor( sin( ((a + 1.77) - 0.222) / 0.18 ) * 0.71 ) + 1.;
     //f = smoothstep(-.5,1., cos(a*10.))*0.2+0.5;
 
     //color = vec3( 1.-smoothstep(f,f+0.02,r) );
