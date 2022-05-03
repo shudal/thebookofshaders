@@ -224,16 +224,20 @@ mat2 rotate2d(float _angle){
 void main(){
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     vec3 color = vec3(0.0);
-
-    // move space from the center to the vec2(0.0)
+	
+	float tmpx=pow(mod(u_time,5.0),2.);
+    vec2 translate = vec2(cos(tmpx),sin(u_time));
+    st += translate*0.35;
+    
+	// move space from the center to the vec2(0.0)
     st -= vec2(0.5);
     // rotate the space
-    st = rotate2d( sin(u_time)*PI ) * st;
+    st = rotate2d( sin(tmpx)*PI ) * st;
     // move it back to the original place
     st += vec2(0.5);
 
     // Show the coordinates of the space on the background
-    // color = vec3(st.x,st.y,0.0);
+    //color = vec3(st.x,st.y,0.0);
 
     // Add the shape on the foreground
     color += vec3(cross(st,0.4));
