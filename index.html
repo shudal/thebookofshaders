@@ -8,11 +8,16 @@
         }
     </script>
     <script id="fragmentShader" type="x-shader/x-fragment">
-	#ifdef GL_ES
+
+#ifdef GL_ES
 precision mediump float;
 #endif
 
+#define PI 3.14159265359
+#define TWO_PI 6.28318530718
+
 uniform vec2 u_resolution;
+uniform vec2 u_mouse;
 uniform float u_time;
 
 vec3 rgb2hsb( in vec3 c ){
@@ -175,41 +180,40 @@ void drawFlower(vec2 st, vec2 ori, float cntHuaBan, float wid,float huaBanLenAdd
         gl_FragColor += vec4(color, 1.0);
     }
 }
-void main(){
-    vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    gl_FragColor = vec4(vec3(0.),1.);
+void drawMultiShaped(vec2 st, vec2 ori, int N, float outr, float outWid) {
+  st=st+(vec2(0.5,0.5)-ori);
 
-    vec3 color = vec3(0.0);
+  vec3 color = vec3(0.0);
+  float d = 0.0;
 
-    vec2 pos = vec2(0.5)-st;
+  // Remap the space to -1. to 1.
+  st = st *2.-1.;
+ 
 
-    float r = length(pos)*2.0;
-    float a = atan(pos.y,pos.x);
+  // Angle and radius from the current pixel
+  float a = atan(st.x,st.y)+PI;
+  float r = TWO_PI/float(N);
 
-    vec2 ori = f1(vec2(0.2,0.2));
-    //drawFlower(st,ori,8.,0.1,0.1);
-    drawFlower(st,ori,8.,0.2,0.02);
-    drawCycle(st,ori,0.05,0.05);
-    drawCycle(st,ori,0.13,0.05);
-    float f = cos(a*3.);
-    f = abs(cos(a*3.));
-    f = abs(cos(a*2.5))*.5+0.3;
-    f = abs(cos(a*12.)*sin(a*3.))*.8+.1;
-    f = abs(fract(a*6.));
-    f = abs(max(fract(a),fract(a+0.5)));
-    f = abs(floor( (sin(a*8. )+0.2)-0.257)+1.);
-	f = floor( sin( ((a + 1.77) - 0.222) / 0.18 ) * 0.71 ) + 1.;
-    //f = smoothstep(-.5,1., cos(a*10.))*0.2+0.5;
+  // Shaping function that modulate the distance
+  d = cos(floor(.5+a/r)*r-a)*length(st);
 
-    //color = vec3( 1.-smoothstep(f,f+0.02,r) );
-    float sv = smoothstep(f,f+0.05,r);
-    if (sv > 0. && sv < 1.) { 
-        color = vec3(sv);
-        //color = vec3(f,f+0.02,r);
-        //color = vec3();
-    }
-   gl_FragColor += vec4(color, 1.0);
+  color = vec3(1.-smoothstep(outr, outr+outWid,d));
+  
+  gl_FragColor += vec4(color,1.0);
 }
+// Reference to
+// http://thndl.com/square-shaped-shaders.html
+
+void main(){
+  vec2 st = gl_FragCoord.xy/u_resolution.xy;
+  st.x *= u_resolution.x/u_resolution.y;
+  
+  gl_FragColor = vec4(vec3(0.),1.);
+  
+  drawMultiShaped(st,vec2(0.2),3,0.1,0.01);
+  drawMultiShaped(st,vec2(0.2,0.6),5,0.15,0.02);
+}
+
 
     </script>
     <script>
