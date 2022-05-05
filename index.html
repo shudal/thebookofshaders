@@ -238,27 +238,24 @@ void main(){
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     
 	int row,col;
-	st = toGrid(st,vec2(3,3),row,col); 
+	st = toGrid(st,vec2(6,6),row,col); 
 	
-    st -= vec2(0.5);
-    st = rotate2d(PI/4. + f1(0.1)) * st;
-    st += vec2(0.5);
-
     vec3 color=vec3(0.);
-    bool x=IsInnerRect(st,vec2(0.15),vec2(0.15));
-    if (x) {
-        color = hsb2rgb(    vec3(   f1(float(row*col)*st.x*st.y),   1., 1.)   );
-    }
-    //vec3 color = drawRect(st,vec2(0.15),vec2(0.15));
+ 
+ 
+	if (mod(float(row),2.) == 0.) { 
 
-	//vec3 color = vec3(0.0);
-
-	if (mod(float(row),2.)==0.) { 
-       
-	} else {  
-
+	} else {   
+        st.x += 0.4;
+        //st = fract(st);
 	}
-	
+
+    color = vec3(box(st,vec2(0.9)));
+    bool x=IsInnerRect(st,vec2(0.05),vec2(0.05));
+    if (x) {
+        //color = vec3(1.);
+        //color = hsb2rgb(    vec3(   st.x*st.y,   1., 1.)   );
+    } 
 	gl_FragColor = vec4(color,1.0);
 
 }
