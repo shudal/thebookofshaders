@@ -123,6 +123,10 @@ float f1(float x) {
 vec2 f1(vec2 x) {
 	return vec2(f1(x.x),f1(x.y));
 }
+float f2() {
+    float ans=sin( ( mod(u_time,PI)));
+    return ans;
+}
 
 float plot(vec2 st, float pct){
     return  smoothstep( pct-0.02, pct, st.y) -
@@ -242,14 +246,21 @@ void main(){
 	
     vec3 color=vec3(0.);
  
- 
-	if (mod(float(row),2.) == 0.) { 
-
-	} else {   
-        st.x += 0.4;
-        //st = fract(st);
-	}
-
+    if (mod(u_time,PI)/PI > 0.5) {
+        if (mod(float(row),2.) == 0.) {  
+            st.x -= f2();
+        } else {   
+            st.x += f2();;
+        }
+    } else { 
+        if (mod(float(col),2.) == 0.) {  
+            st.y -= f2();;
+        } else {   
+            st.y += f2();;
+        }
+    
+    }
+    st = fract(st);
     color = vec3(box(st,vec2(0.9)));
     bool x=IsInnerRect(st,vec2(0.05),vec2(0.05));
     if (x) {
