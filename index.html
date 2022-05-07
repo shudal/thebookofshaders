@@ -338,8 +338,9 @@ void main() {
 
     vec2 ori=vec2(x2,y);
     
-    if (length(ori-vec2(0.5))>0.1) {
-        fst = rotate2D(fst,sin(u_time)*TWO_PI);
+    float len1=length(ori-vec2(0.5));
+    if (len1>0.1) {
+        fst = rotate2D(fst,smoothstep(0.1,0.15,len1)*sin(u_time)*TWO_PI);
         
     }
     float x1=drawMultiShaped(fst, ori, 6, 0.3, 0.01);
