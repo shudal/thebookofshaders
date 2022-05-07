@@ -299,23 +299,25 @@ vec2 rotateTilePattern(vec2 _st){
 
     return _st;
 }
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         u_mouse))*
-        43758.5453123);
-}
-
 float random2 (in vec2 _st) {
     return fract(sin(dot(_st.xy,
                          vec2(12.9898,78.233)))*
         43758.5453123);
 }
 
+float random (vec2 st) {
+    return random2(st);
+    return fract(sin(dot(st.xy,
+                         u_mouse))*
+        43758.5453123);
+}
+
+
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     //st *= 2.0;
-    st.y *= 22.0;
+    st.y *= 32.0;
     //st = (st-vec2(5.0))*(abs(sin(u_time*0.2))*5.);
     //st.x += u_time*3.0;
 
@@ -323,22 +325,25 @@ void main() {
     vec2 fpos = fract(st);  // fraction
  
 
+    float x2=mod(u_time/2.,5.);
+    x2 *= (1. + random(vec2(ipos.y)));
+
 	if (mod(ipos.y,2.) > 0.5) {
-		st.x += sin(sin(u_time)*u_time);
+		st.x += x2;
 	} else {
-		st.x -= sin(sin(u_time)*u_time);
+		st.x -= x2;
 		
 	}
 
     st = fract(st);
 	
-    float x1 = st.x - mod(st.x,0.01);
+    float x1 = st.x - mod(st.x,0.02+0.01*ipos.y);
     float randr = random(vec2(x1));
 
     //drawCycle(st,vec2(0.5),0.3,0.02);
     float color = 1.0;
 
-    if (randr > 0.95) {
+    if (randr > (u_mouse.x/500.)) {
         color = 0.;
     } 
   
