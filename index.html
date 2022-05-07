@@ -316,8 +316,8 @@ float random (vec2 st) {
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    //st *= 2.0;
-    st.y *= 32.0;
+    //st *= 32.0;
+    st.y *= 50.0;
     //st = (st-vec2(5.0))*(abs(sin(u_time*0.2))*5.);
     //st.x += u_time*3.0;
 
@@ -327,6 +327,7 @@ void main() {
 
     float x2=mod(u_time/2.,5.);
     x2 *= (1. + random(vec2(ipos.y)));
+    x2 = fract(x2);
 
 	if (mod(ipos.y,2.) > 0.5) {
 		st.x += x2;
@@ -337,13 +338,20 @@ void main() {
 
     st = fract(st);
 	
-    float x1 = st.x - mod(st.x,0.02+0.01*ipos.y);
+    float x1 = st.x - mod(st.x,0.001+0.001*ipos.y);
     float randr = random(vec2(x1));
 
-    //drawCycle(st,vec2(0.5),0.3,0.02);
+    //drawCycle(st,vec2(0.5),0.3,0.001);
     float color = 1.0;
 
-    if (randr > (u_mouse.x/500.)) {
+    float coy=50. - ipos.y;
+    float cox=fpos.x / (1./ 50.0);
+    bool cob1=false;
+    if (coy*50. + cox < u_time*20.) {
+        cob1 =  true;
+    }
+
+    if (randr > (u_mouse.x/500.) && cob1) {
         color = 0.;
     } 
   
