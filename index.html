@@ -291,7 +291,7 @@ vec2 rotateTilePattern(vec2 _st){
 }
 float random (vec2 st) {
     return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
+                         u_mouse))*
         43758.5453123);
 }
 
@@ -327,7 +327,8 @@ void main() {
 
             uniforms = {
                 u_time: { type: "f", value: 1.0 },
-                u_resolution: { type: "v2", value: new THREE.Vector2() }
+                u_resolution: { type: "v2", value: new THREE.Vector2() },
+				u_mouse: { type: "v2", value: new THREE.Vector2},
             };
 
             var material = new THREE.ShaderMaterial( {
@@ -346,6 +347,18 @@ void main() {
 
             onWindowResize();
             window.addEventListener( 'resize', onWindowResize, false );
+			
+			container.addEventListener("mousemove", function __handler__(evt) {
+				var x = evt.clientX;
+				var y = evt.clientY;
+				var rect = container.getBoundingClientRect();
+				x -= rect.left;
+				y -= rect.top;
+				
+				uniforms.u_mouse.value.x = x;
+				uniforms.u_mouse.value.y = y;
+				console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
+			});
         }
 
         function onWindowResize( event ) {
@@ -367,6 +380,7 @@ void main() {
 
         function render() {
             uniforms.u_time.value += clock.getDelta();
+		
             renderer.render( scene, camera );
         }
     </script>
