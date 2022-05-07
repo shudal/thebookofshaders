@@ -132,7 +132,7 @@ float plot(vec2 st, float pct){
     return  smoothstep( pct-0.02, pct, st.y) -
             smoothstep( pct, pct+0.02, st.y);
   }
-void drawCycle(vec2 st, vec2 ori, float r, float outHalfWid) {
+float drawCycle(vec2 st, vec2 ori, float r, float outHalfWid) {
 	float dis=distance(st,ori);
       
 	if (dis < (r+outHalfWid) && dis > (r-outHalfWid)) { 
@@ -140,12 +140,16 @@ void drawCycle(vec2 st, vec2 ori, float r, float outHalfWid) {
 		vec2 n = normalize(st-ori);
 		vec2 x1 = abs(smoothstep(ori+(r - outHalfWid)*n ,ori+(r +outHalfWid)*n,st) - 0.5)*2.0;
 		x1 = 1.0 - x1;
+        
+        return x1.x*x1.y;
+
 		vec3 color;
 		color = vec3(x1.x*x1.y);
 		//vec3 color = hsb2rgb(vec3(f1(x1.x*x1.y),f1(1.),f1(1.)));
 		gl_FragColor += vec4(color,1.);
 		
 	} 
+    return 0.;
 }
 
 void drawCycleTmp(vec2 st) {
@@ -326,27 +330,23 @@ float noise(float x) {
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     
-    st *= 10.;
+    st *= 1.;
     vec2 ist = floor(st);
     vec2 fst = fract(st);
-
-    float x2=noise(ist.x+u_time);
-    float y=noise(ist.y+u_time);
-
-    x2 = (x2-0.5)/4. + 1./2.;
-    y = (y-0.5)/4. + 1./2.;
-
-    vec2 ori=vec2(x2,y);
+ 
     
-    float len1=length(ori-vec2(0.5));
-    if (len1>0.1) {
-        fst = rotate2D(fst,smoothstep(0.1,0.15,len1)*sin(u_time)*TWO_PI);
-        
-    }
-    float x1=drawMultiShaped(fst, ori, 6, 0.3, 0.01);
 
-    float color=x1;
-    gl_FragColor = vec4(vec3(color),1.);
+    st += vec2(mix(-0.1,0.1,noise(st.x+u_time)),mix(-0.1,0.1,noise(st.y+u_time)));
+
+    vec3 color=vec3(0.);
+    
+    vec2 ori=vec2(0.5);
+    float x2=drawCycle(st,ori, 0.4, 0.01);
+    color = vec3(x2);
+    //color = hsb2rgb(vec3(fract(st.x+st.y),1.,1.));
+    
+
+    gl_FragColor = vec4(color,1.);
 }
 
 
