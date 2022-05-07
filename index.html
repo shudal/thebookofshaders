@@ -304,7 +304,9 @@ float random2 (in vec2 _st) {
                          vec2(12.9898,78.233)))*
         43758.5453123);
 }
-
+float random(float x) {
+    return fract(sin(x)*100000.0);
+}
 float random (vec2 st) {
     return random2(st);
     return fract(sin(dot(st.xy,
@@ -313,48 +315,32 @@ float random (vec2 st) {
 }
 
 
-
+// return 0~1;
+float noise(float x) {
+    float i = floor(x);  // 整数（i 代表 integer）
+    float f = fract(x);  
+    float u = f * f * (3.0 - 2.0 * f ); // custom cubic curve
+    float y = mix(random(i), random(i + 1.0), u);
+    return y;
+}
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    //st *= 32.0;
-    st.y *= 50.0;
-    //st = (st-vec2(5.0))*(abs(sin(u_time*0.2))*5.);
-    //st.x += u_time*3.0;
+    
+    st *= 3.;
+    vec2 ist = floor(st);
+    vec2 fst = fract(st);
 
-    vec2 ipos = floor(st);  // integer
-    vec2 fpos = fract(st);  // fraction
- 
+    float x2=noise(ist.x+u_time);
+    float y=noise(ist.y+u_time);
 
-    float x2=mod(u_time/2.,5.);
-    x2 *= (1. + random(vec2(ipos.y)));
-    x2 = fract(x2);
+    x2 = (x2-0.5)/4. + 1./2.;
+    y = (y-0.5)/4. + 1./2.;
 
-	if (mod(ipos.y,2.) > 0.5) {
-		st.x += x2;
-	} else {
-		st.x -= x2;
-		
-	}
+    vec2 ori=vec2(x2,y);
+    
+    float x1=drawMultiShaped(fst, ori, 6, 0.3, 0.01);
 
-    st = fract(st);
-	
-    float x1 = st.x - mod(st.x,0.001+0.001*ipos.y);
-    float randr = random(vec2(x1));
-
-    //drawCycle(st,vec2(0.5),0.3,0.001);
-    float color = 1.0;
-
-    float coy=50. - ipos.y;
-    float cox=fpos.x / (1./ 50.0);
-    bool cob1=false;
-    if (coy*50. + cox < u_time*20.) {
-        cob1 =  true;
-    }
-
-    if (randr > (u_mouse.x/500.) && cob1) {
-        color = 0.;
-    } 
-  
+    float color=x1;
     gl_FragColor = vec4(vec3(color),1.);
 }
 
