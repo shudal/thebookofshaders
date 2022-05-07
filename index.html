@@ -289,42 +289,18 @@ vec2 rotateTilePattern(vec2 _st){
 
     return _st;
 }
+float random (vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233)))*
+        43758.5453123);
+}
 
-void main (void) {
-	gl_FragColor = vec4(vec3(0.),1.);
-	
+void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-	
-	//st.x = st.y * u_resolution.x / u_resolution.y;
 
-    st = tile(st,3.);
-    st = rotateTilePattern(st);
+    float rnd = random( st );
 
-    // Make more interesting combinations
-    //st = tile(st,2.0);
-    //st = rotate2D(st,-PI*u_time*0.25);
-    //st = rotateTilePattern(st*2.);
-    //st = rotate2D(st,PI*u_time*0.25);
-
-    // step(st.x,st.y) just makes a b&w triangles
-    // but you can use whatever design you want.
-	
-	vec2 ori=vec2(0.5);
-	vec3 color = vec3(drawMultiShaped(st, vec2(0.5), 3, 0.07, 0.001 ));
-	
-	if (color.x > 0.5) { 
-		float len1=length(vec2(0.5)-st);
-		float hsbs=smoothstep(0.3,0.,len1);
-		float hsbh=len1;
-		vec3 col2 = hsb2rgb(vec3(hsbh,hsbs,hsbs)); 
-		color *= col2;
-		
-		gl_FragColor += vec4(color,1.0);
-		
-	}
-	
-	drawFlower(st, ori, 5., 0.3,0.3);
-	drawCycle(st, ori, 0.15, 0.02);
+    gl_FragColor = vec4(vec3(rnd),1.0);
 }
 
 
