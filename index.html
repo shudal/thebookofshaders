@@ -373,24 +373,29 @@ float gnoise(vec2 st) {
                      random2( i + vec2(1.0,1.0) ), u.x), u.y);
 }
 float lines(in vec2 pos, float b){
-    float scale = 10.0;
+    float scale = 5.0;
     pos *= scale;
     return smoothstep(0.0,
                     .5+b*.5,
-                    abs((sin(pos.x*3.1415)+b*2.0))*.5);
+                    abs((sin(pos.y*3.1415)+b*2.0))*.5);
 }
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
+
+    st.y *= u_resolution.y/u_resolution.x;
 
     st.y *= 6.; 
     vec3 color=vec3(0.);
 
     float y1 = gnoise(st*vec2(2.,1.));
   
-    st=rotate2D(st,y1);
+    st=rotate2D(st,TWO_PI*y1);
  
-    color=vec3(lines(st,.5));
-    
+    vec2 fst = fract(st);
+    //color=vec3(lines(st,.5));
+    color=vec3(IsInnerRect(fst,vec2(0.,0.45),vec2(0.,0.3)));
+
+    color = color * (vec3(220.+40.*gnoise(st),130.+40.*gnoise(st+50.),39.)/256.);
     gl_FragColor = vec4(color, 1.0);
 }
 
@@ -455,8 +460,8 @@ void main() {
 
         function onWindowResize( event ) {
 			var f1=1.0;
-			var w=500;
-			var h=500;
+			var w=3840;
+			var h=2160;
             //renderer.setSize( window.innerWidth *f1, window.innerHeight * f1 );
             renderer.setSize( w, h );
             uniforms.u_resolution.value.x = renderer.domElement.width * f1;
