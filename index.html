@@ -372,44 +372,24 @@ float gnoise(vec2 st) {
                 mix( random2( i + vec2(0.0,1.0) ), 
                      random2( i + vec2(1.0,1.0) ), u.x), u.y);
 }
+float lines(in vec2 pos, float b){
+    float scale = 10.0;
+    pos *= scale;
+    return smoothstep(0.0,
+                    .5+b*.5,
+                    abs((sin(pos.x*3.1415)+b*2.0))*.5);
+}
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
 
-    st.x *= 3.;
+    st.y *= 6.; 
+    vec3 color=vec3(0.);
 
-    vec2 fst = fract(st);
-    vec2 ist = floor(st);
-
-     
-    vec2 plb=vec2(0.1);
-    vec2 prt=vec2(0.1);
-    
-    float sca3=258.;
-    vec3 color=vec3(fract(0.29+noise(st*sca3 + u_time)/5.),0.07,0.01);
-
-    float sca=53.;
-
-    float x3=0.02;
-    float x1=mix(-x3,x3,gnoise(st*sca+u_time)); 
-    float y1=mix(-x3,x3,gnoise(st*sca+0.5+u_time)); 
-    fst = fst + vec2(x1,y1);
-    fst = fract(fst);
-
-    if (IsInnerRect(fst,plb,prt)) {
-        if ((IsInnerRect(fst,plb+vec2(0.02),prt+vec2(0.02))==false)) {
-
-        } 
-        float sca2=8.;
-        color=vec3(0.59+gnoise(st*sca2+u_time)/5.,0.,0.);
-    } else {
-        if (IsInnerRect(fst+vec2(0.05),plb,prt) || IsInnerRect(fst-vec2(0.05),plb,prt)) { 
-            float x1 = noise(st);
-
-            //color=vec3(0.7+x1/6.,0.,0.);
+    float y1 = gnoise(st*vec2(2.,1.));
+  
+    st=rotate2D(st,y1);
  
-        }
-    }
-     
+    color=vec3(lines(st,.5));
     
     gl_FragColor = vec4(color, 1.0);
 }
