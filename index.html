@@ -381,22 +381,20 @@ float lines(in vec2 pos, float b){
 }
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    st.x *= u_resolution.x/u_resolution.y;
+    vec3 color = vec3(0.0);
 
-    st.y *= u_resolution.y/u_resolution.x;
+    float t = 1.0;
+    // Uncomment to animate
+    t = abs(1.0-sin(u_time*.1))*5.;
+    // Comment and uncomment the following lines:
+    st += noise(st*2.)*t; // Animate the coordinate space
+    color = vec3(1.) * smoothstep(.18,.2,gnoise(st)); // Big black drops
+    color += smoothstep(.15,.2,gnoise(st*10.)); // Black splatter
+    color -= smoothstep(.35,.4,gnoise(st*10.)); // Holes on splatter
 
-    st.y *= 6.; 
-    vec3 color=vec3(0.);
-
-    float y1 = gnoise(st*vec2(2.,1.));
-  
-    st=rotate2D(st,TWO_PI*y1);
- 
-    vec2 fst = fract(st);
-    //color=vec3(lines(st,.5));
-    color=vec3(IsInnerRect(fst,vec2(0.,0.45),vec2(0.,0.3)));
-
-    color = color * (vec3(220.+40.*gnoise(st),130.+40.*gnoise(st+50.),39.)/256.);
-    gl_FragColor = vec4(color, 1.0);
+    color = fract(color);
+    gl_FragColor = vec4(1.-color,1.0);
 }
 
 
