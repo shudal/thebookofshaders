@@ -82,7 +82,7 @@ vec3 RGBtoRYB(vec3 RGB)
 }
 #define TWO_PI 6.28318530718
  
-vec3 drawRect(vec2 st,vec2 plb, vec2 prt) {
+float drawRect(vec2 st,vec2 plb, vec2 prt) {
 	
     vec2 bl = floor(st-plb)+1.0;
 	float pct = bl.x * bl.y;
@@ -92,8 +92,10 @@ vec3 drawRect(vec2 st,vec2 plb, vec2 prt) {
 	pct *= tr.x * tr.y;
 
 	//pct = 1.0-pct;
-    vec3 color = vec3(pct); 
-    return color;
+    return pct;
+
+    //vec3 color = vec3(pct); 
+    //return color;
     //fcolor += color;
 	//gl_FragColor += vec4(color,1.);
 }
@@ -347,22 +349,44 @@ float noise (in vec2 st) {
     // u = smoothstep(0.,1.,f);
 
     // Mix 4 coorners percentages
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
+    //return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) +  (d - b) * u.x * u.y;
+    return mix(mix(a, b, smoothstep(0.0, 1.0, f.x)), mix(c, d, smoothstep(0.0, 1.0, f.x)), smoothstep(0.0, 1.0, f.y));
 }
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
 
-    // Scale the coordinate system to see
-    // some noise in action
-    vec2 pos = vec2(st*5.0);
+    st.x *= 3.;
 
-    // Use the noise function
-    float n = noise(pos);
+    vec2 fst = fract(st);
+    vec2 ist = floor(st);
 
-    gl_FragColor = vec4(vec3(n), 1.0);
+     
+    vec2 plb=vec2(0.1);
+    vec2 prt=vec2(0.1);
+    vec3 color=vec3(0.29,0.07,0.);
+
+    float x3=0.1;
+    float x1=mix(-x3,x3,noise(fst)); 
+    fst += vec2(x1,0.);
+    fst = fract(fst);
+
+    if (IsInnerRect(fst,plb,prt)) {
+        if ((IsInnerRect(fst,plb+vec2(0.02),prt+vec2(0.02))==false)) {
+
+        } 
+        color=vec3(0.59+noise(fst)/10.,0.,0.);
+    } else {
+        if (IsInnerRect(fst+vec2(0.05),plb,prt) || IsInnerRect(fst-vec2(0.05),plb,prt)) { 
+            float x1 = noise(st);
+
+            //color=vec3(0.7+x1/6.,0.,0.);
+ 
+        }
+    }
+     
+    
+    gl_FragColor = vec4(color, 1.0);
 }
 
 
