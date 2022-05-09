@@ -504,7 +504,7 @@ void main() {
 
     vec3 color = vec3(.0);
 
-    float sca=23.; 
+    float sca=3.; 
     st *= sca;
     
     stMouse *= sca ;
@@ -518,7 +518,7 @@ void main() {
     vec2 f_st = fract(st);
 
     float m_dist = 1.;  // minimum distance
-
+    vec2 m_point;  
     for (int y= -1; y <= 1; y++) {
         for (int x= -1; x <= 1; x++) {
             // Neighbor place in the grid
@@ -536,6 +536,11 @@ void main() {
             // Distance to the point
             float dist = length(diff);
 
+            if (dist < m_dist) {
+                m_dist = dist;
+                m_point=i_st + neighbor + point;
+                m_point=point;
+            }
             // Keep the closer distance
             m_dist = min(m_dist, dist);
             
@@ -563,7 +568,9 @@ void main() {
     //color.rg = fMouse;
     //color.rg = st;
 
-    color=hsb2rgb(vec3( (color.x+sin(u_time))/2.,m_dist,m_dist));
+    //color=hsb2rgb(vec3( (color.x+sin(u_time))/2.,m_dist,m_dist));
+
+    color.rg=m_point;
     gl_FragColor = vec4(color,1.0);
  
 }
