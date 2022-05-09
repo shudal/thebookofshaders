@@ -352,13 +352,15 @@ float noise (in vec2 st) {
     //return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) +  (d - b) * u.x * u.y;
     return mix(mix(a, b, smoothstep(0.0, 1.0, f.x)), mix(c, d, smoothstep(0.0, 1.0, f.x)), smoothstep(0.0, 1.0, f.y));
 }
-float random2(vec2 st){
+float random2f(vec2 st){
     st = vec2( dot(st,vec2(127.1,311.7)),
               dot(st,vec2(269.5,183.3)) );
     
     return -1.0 + 2.0 * fract( sin( dot( st.xy, vec2(12.9898,78.233) ) ) * 43758.5453123);
+} 
+vec2 random2( vec2 p ) {
+    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
 }
-
 // Gradient Noise by Inigo Quilez - iq/2013
 // https://www.shadertoy.com/view/lsf3WH
 float gnoise(vec2 st) {
@@ -367,10 +369,10 @@ float gnoise(vec2 st) {
 	
 	vec2 u = f*f*(3.0-2.0*f);
 
-    return mix( mix( random2( i + vec2(0.0,0.0) ), 
-                     random2( i + vec2(1.0,0.0) ), u.x),
-                mix( random2( i + vec2(0.0,1.0) ), 
-                     random2( i + vec2(1.0,1.0) ), u.x), u.y);
+    return mix( mix( random2f( i + vec2(0.0,0.0) ), 
+                     random2f( i + vec2(1.0,0.0) ), u.x),
+                mix( random2f( i + vec2(0.0,1.0) ), 
+                     random2f( i + vec2(1.0,1.0) ), u.x), u.y);
 }
 float lines(in vec2 pos, float b){
     float scale = 5.0;
@@ -470,44 +472,99 @@ float snoise(vec2 v) {
     g.yz = a0.yz * vec2(x1.x,x2.x) + h.yz * vec2(x1.y,x2.y);
     return 130.0 * dot(m, g);
 }
-void main() {
-	vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    st.x = st.x * u_resolution.x / u_resolution.y;
- 
-    st.x *= 2.;
-    st.y *= 3.;
-
-    vec2 ist=floor(st);
-    vec2 fst=fract(st);
-
-    
-    vec2 plb=vec2(0.2,0.2);
-    vec2 prt=plb;
-
-    float x3=smoothstep(-1.,1.,sin(u_time))/2.;
-    float x5=0.05;
-    if (mod(ist.x,2.) < 0.5) {
-        prt=vec2(-x5+x3,0.2);
-    } else {
-        plb=vec2(-x5+x3,0.2);
-    }
-
-
-    vec3 color=vec3(1.);
-
-    float x1=snoise(st*30. + u_time/5.);
-    float x2=0.01;
-    fst = fst + mix(-x2,x2,x1);
-    
-    fst = clamp(vec2(0.),vec2(1.),fst);
-    if (IsInnerRect(fst,plb,prt)) {
-        color=vec3(0.);
-    }
-    
- 
-	gl_FragColor = vec4( color, 1.0 );
+vec2 skew (vec2 st) {
+    vec2 r = vec2(0.0);
+    r.x = 1.1547*st.x;
+    r.y = st.y+0.5*r.x;
+    return r;
 }
 
+bool eq(float x, float y) {
+    if (abs(x-y)<0.01) {
+        return true;
+    } else {
+        return false;
+    }
+}
+bool eq(vec2 x, vec2 y) {
+    if (eq(x.x,y.x) && eq(x.y,y.y)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+void main() {
+    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    
+    //vec2 stMouse=vec2(u_mouse.x/u_resolution.x, (u_resolution.y-u_mouse.y)/u_resolution.y);
+     vec2 stMouse=u_mouse;
+
+    st.x *= u_resolution.x/u_resolution.y;
+    stMouse.x *= u_resolution.x/u_resolution.y;
+
+    vec3 color = vec3(.0);
+
+    float sca=3.; 
+    st *= sca;
+    
+    stMouse *= sca ;
+
+    
+    vec2 fMouse = fract(stMouse);
+    vec2 iMouse = floor(stMouse);
+
+    // Tile the space
+    vec2 i_st = floor(st);
+    vec2 f_st = fract(st);
+
+    float m_dist = 1.;  // minimum distance
+
+    for (int y= -1; y <= 1; y++) {
+        for (int x= -1; x <= 1; x++) {
+            // Neighbor place in the grid
+            vec2 neighbor = vec2(float(x),float(y));
+
+            // Random position from current + neighbor place in the grid
+            vec2 point = random2(i_st + neighbor);
+
+			// Animate the point
+            point = 0.5 + 0.5*sin(u_time + 6.2831*point);
+
+			// Vector between the pixel and the point
+            vec2 diff = neighbor + point - f_st;
+
+            // Distance to the point
+            float dist = length(diff);
+
+            // Keep the closer distance
+            m_dist = min(m_dist, dist);
+            
+            if (eq(iMouse,i_st + neighbor)) { 
+                m_dist = min(m_dist,length(neighbor+fMouse-f_st));
+            }
+        }
+    }
+
+  
+
+    // Draw the min distance (distance field)
+    color += m_dist;
+
+    // Draw cell center
+    color += 1.-step(.02, m_dist);
+
+    // Draw grid
+    //color.r += step(.98, f_st.x) + step(.98, f_st.y);
+
+    // Show isolines
+    color -= step(.7,abs(sin(27.0*m_dist)))*.5;
+
+    //color=vec3(0.);
+    //color.rg = fMouse;
+    //color.rg = st;
+    gl_FragColor = vec4(color,1.0);
+ 
+}
 
 
     </script>
@@ -515,6 +572,7 @@ void main() {
         var container;
         var camera, scene, renderer, clock;
         var uniforms;
+        var tRes = {w:3840,h:2160};
 
         init();
         animate();
@@ -554,6 +612,7 @@ void main() {
             onWindowResize();
             window.addEventListener( 'resize', onWindowResize, false );
 			
+            /*
 			container.addEventListener("mousemove", function __handler__(evt) {
 				var x = evt.clientX;
 				var y = evt.clientY;
@@ -563,18 +622,43 @@ void main() {
 				
 				uniforms.u_mouse.value.x = x;
 				uniforms.u_mouse.value.y = y;
-				//console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
+ 
+                //uniforms.u_mouse.value = uniforms.u_mouse.value / uniforms.u_resolution.value;
+				console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
+			});
+            */
+            renderer.domElement.addEventListener("mousemove", function __handler__(evt) {
+				var x = evt.clientX;
+				var y = evt.clientY;
+				var rect = renderer.domElement.getBoundingClientRect();
+				x -= rect.left;
+				y -= rect.top;
+                
+				
+				uniforms.u_mouse.value.x = x;
+				uniforms.u_mouse.value.y = y;
+ 
+
+                uniforms.u_mouse.value.y = tRes.h-uniforms.u_mouse.value.y;
+                uniforms.u_mouse.value.y = uniforms.u_mouse.value.y / tRes.h;
+                uniforms.u_mouse.value.x = uniforms.u_mouse.value.x / tRes.w;
+
+                //uniforms.u_mouse.value = uniforms.u_mouse.value / uniforms.u_resolution.value;
+				console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
 			});
         }
 
         function onWindowResize( event ) {
 			var f1=1.0;
-			var w=3840;
-			var h=2160;
+			var w=tRes.w; 
+			var h=tRes.h;
             //renderer.setSize( window.innerWidth *f1, window.innerHeight * f1 );
             renderer.setSize( w, h );
+  
             uniforms.u_resolution.value.x = renderer.domElement.width * f1;
             uniforms.u_resolution.value.y = renderer.domElement.height * f1;
+            //uniforms.u_resolution.value.x = w;
+            //uniforms.u_resolution.value.y = h;
             //uniforms.u_resolution.value.x = w;
             //uniforms.u_resolution.value.y = h;
         }
