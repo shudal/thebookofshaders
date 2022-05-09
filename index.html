@@ -493,7 +493,38 @@ bool eq(vec2 x, vec2 y) {
         return false;
     }
 }
+vec3 hash3( vec2 p ) {
+    vec3 q = vec3( dot(p,vec2(127.1,311.7)),
+                   dot(p,vec2(269.5,183.3)),
+                   dot(p,vec2(419.2,371.9)) );
+    return fract(sin(q)*43758.5453);
+}
+
+float iqnoise( in vec2 x, float u, float v ) {
+    vec2 p = floor(x);
+    vec2 f = fract(x);
+
+    float k = 1.0+63.0*pow(1.0-v,4.0);
+
+    float va = 0.0;
+    float wt = 0.0;
+    for (int j=-2; j<=2; j++) {
+        for (int i=-2; i<=2; i++) {
+            vec2 g = vec2(float(i),float(j));
+            vec3 o = hash3(p + g)*vec3(u,u,1.0);
+            vec2 r = g - f + o.xy;
+            float d = dot(r,r);
+            float ww = pow( 1.-smoothstep(0.0,1.414,sqrt(d)), k );
+            va += o.z*ww;
+            wt += ww;
+        }
+    }
+
+    return va/wt;
+}
+
 void main() {
+   
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     
     //vec2 stMouse=vec2(u_mouse.x/u_resolution.x, (u_resolution.y-u_mouse.y)/u_resolution.y);
@@ -501,10 +532,9 @@ void main() {
 
     st.x *= u_resolution.x/u_resolution.y;
     stMouse.x *= u_resolution.x/u_resolution.y;
+ 
 
-    vec3 color = vec3(.0);
-
-    float sca=13.; 
+    float sca=1.; 
     st *= sca;
     
     stMouse *= sca ;
@@ -517,87 +547,14 @@ void main() {
     vec2 i_st = floor(st);
     vec2 f_st = fract(st);
 
-    float m_dist = 1.;  // minimum distance
-    vec2 m_point,m_nei,m_diff;
-    for (int y= -1; y <= 1; y++) {
-        for (int x= -1; x <= 1; x++) {
-            // Neighbor place in the grid
-            vec2 neighbor = vec2(float(x),float(y));
+    vec3 color = vec3(0.0);
 
-            // Random position from current + neighbor place in the grid
-            vec2 point = random2(i_st + neighbor);
-
-            vec2 point_ori = point;
-			// Animate the point
-            point = 0.5 + 0.5*sin(u_time + 6.2831*point);
-
-			// Vector between the pixel and the point
-            vec2 diff = neighbor + point - f_st;
-
-            // Distance to the point
-            float dist = length(diff);
-
-            if (dist < m_dist) {
-                m_dist = dist;
-                m_point=i_st + neighbor + point;
-                m_point=point;
-
-                m_nei = neighbor;
-                m_diff=diff;
-            }
-            
-            if (eq(iMouse,i_st + neighbor)) { 
-                //m_dist = min(m_dist,length(neighbor+fMouse-f_st));
-            }
-        }
-    }
-
-  
-    float md = 8.0;
-    const int x4=2;
-    for (int j= -x4; j <= x4; j++) {
-        for (int i= -x4; i <= x4; i++) { 
-            vec2 g = m_nei + vec2(float(i),float(j));
-            vec2 o = random2( i_st + g );
-            o = 0.5 + 0.5*sin( u_time + 6.2831*o );
-
-            vec2 r = g + o - f_st;
-
-            if ( dot(m_diff-r,m_diff-r)>0.00001 ) {
-                md = min(md, dot( 0.5*(m_diff+r), normalize(r-m_diff) ));
-            }
-        }
-    }
-
-    // Draw the min distance (distance field)
-    //color += m_dist;
-
-    // Draw cell center
-   // color += 1.-step(.02, m_dist);
-
-    // Draw grid
-    //color.r += step(.98, f_st.x) + step(.98, f_st.y);
-
-    // Show isolines
-    //color -= step(.7,abs(sin(27.0*md)))*.5;
-
-    //color=vec3(0.);
-    //color.rg = fMouse;
-    //color.rg = st;
-
-    //color=hsb2rgb(vec3( (color.x+sin(u_time))/2.,m_dist,m_dist));
-
-    
-
-    
-    color=vec3(1.);
-    float x3=0.03;
-    color = mix( vec3(0.0), color, smoothstep( x3, x3+0.01, md ) );
+    st *= 10.;
+    float n = iqnoise(st, stMouse.x,stMouse.y);
  
-
-    gl_FragColor = vec4(color,1.0);
- 
+    gl_FragColor = vec4(vec3(n),1.0);
 }
+
 
 
     </script>
