@@ -523,37 +523,32 @@ float iqnoise( in vec2 x, float u, float v ) {
     return va/wt;
 }
 
+#define OCTAVES 6
+float fbm (in vec2 st) {
+    // Initial values
+    float value = 0.0;
+    float amplitude = .5;
+    float frequency = 0.;
+    //
+    // Loop of octaves
+    for (int i = 0; i < OCTAVES; i++) {
+        value += amplitude * noise(st);
+        st *= 2.;
+        amplitude *= .5;
+    }
+    return value;
+}
+
 void main() {
-   
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    
-    //vec2 stMouse=vec2(u_mouse.x/u_resolution.x, (u_resolution.y-u_mouse.y)/u_resolution.y);
-     vec2 stMouse=u_mouse;
-
     st.x *= u_resolution.x/u_resolution.y;
-    stMouse.x *= u_resolution.x/u_resolution.y;
- 
-
-    float sca=1.; 
-    st *= sca;
-    
-    stMouse *= sca ;
-
-    
-    vec2 fMouse = fract(stMouse);
-    vec2 iMouse = floor(stMouse);
-
-    // Tile the space
-    vec2 i_st = floor(st);
-    vec2 f_st = fract(st);
 
     vec3 color = vec3(0.0);
+    color += fbm(st*3.0);
 
-    st *= 10.;
-    float n = iqnoise(st, stMouse.x,stMouse.y);
- 
-    gl_FragColor = vec4(vec3(n),1.0);
+    gl_FragColor = vec4(color,1.0);
 }
+
 
 
 
