@@ -518,7 +518,7 @@ void main() {
     vec2 f_st = fract(st);
 
     float m_dist = 1.;  // minimum distance
-    vec2 m_point;  
+    vec2 m_point,m_nei,m_diff;
     for (int y= -1; y <= 1; y++) {
         for (int x= -1; x <= 1; x++) {
             // Neighbor place in the grid
@@ -527,6 +527,7 @@ void main() {
             // Random position from current + neighbor place in the grid
             vec2 point = random2(i_st + neighbor);
 
+            vec2 point_ori = point;
 			// Animate the point
             point = 0.5 + 0.5*sin(u_time + 6.2831*point);
 
@@ -540,17 +541,33 @@ void main() {
                 m_dist = dist;
                 m_point=i_st + neighbor + point;
                 m_point=point;
+
+                m_nei = neighbor;
+                m_diff=diff;
             }
-            // Keep the closer distance
-            m_dist = min(m_dist, dist);
             
             if (eq(iMouse,i_st + neighbor)) { 
-                m_dist = min(m_dist,length(neighbor+fMouse-f_st));
+                //m_dist = min(m_dist,length(neighbor+fMouse-f_st));
             }
         }
     }
 
   
+    float md = 8.0;
+    const int x4=2;
+    for (int j= -x4; j <= x4; j++) {
+        for (int i= -x4; i <= x4; i++) { 
+            vec2 g = m_nei + vec2(float(i),float(j));
+            vec2 o = random2( i_st + g );
+            o = 0.5 + 0.5*sin( u_time + 6.2831*o );
+
+            vec2 r = g + o - f_st;
+
+            if ( dot(m_diff-r,m_diff-r)>0.00001 ) {
+                md = min(md, dot( 0.5*(m_diff+r), normalize(r-m_diff) ));
+            }
+        }
+    }
 
     // Draw the min distance (distance field)
     color += m_dist;
@@ -562,7 +579,7 @@ void main() {
     //color.r += step(.98, f_st.x) + step(.98, f_st.y);
 
     // Show isolines
-    color -= step(.7,abs(sin(27.0*m_dist)))*.5;
+    color -= step(.7,abs(sin(27.0*md)))*.5;
 
     //color=vec3(0.);
     //color.rg = fMouse;
@@ -571,6 +588,12 @@ void main() {
     //color=hsb2rgb(vec3( (color.x+sin(u_time))/2.,m_dist,m_dist));
 
     color.rg=m_point;
+
+    
+    float x3=0.03;
+    color = mix( vec3(1.0), color, smoothstep( x3, x3+0.01, md ) );
+ 
+
     gl_FragColor = vec4(color,1.0);
  
 }
@@ -653,7 +676,7 @@ void main() {
                 uniforms.u_mouse.value.x = uniforms.u_mouse.value.x / tRes.w;
 
                 //uniforms.u_mouse.value = uniforms.u_mouse.value / uniforms.u_resolution.value;
-				console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
+				//console.log(uniforms.u_mouse.value); // (x, y) 就是鼠标在 canvas 单击时的坐标
 			});
         }
 
