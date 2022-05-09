@@ -504,7 +504,7 @@ void main() {
 
     vec3 color = vec3(.0);
 
-    float sca=3.; 
+    float sca=23.; 
     st *= sca;
     
     stMouse *= sca ;
@@ -551,7 +551,7 @@ void main() {
     color += m_dist;
 
     // Draw cell center
-    color += 1.-step(.02, m_dist);
+   // color += 1.-step(.02, m_dist);
 
     // Draw grid
     //color.r += step(.98, f_st.x) + step(.98, f_st.y);
@@ -562,6 +562,8 @@ void main() {
     //color=vec3(0.);
     //color.rg = fMouse;
     //color.rg = st;
+
+    color=hsb2rgb(vec3(color.x,m_dist,m_dist));
     gl_FragColor = vec4(color,1.0);
  
 }
